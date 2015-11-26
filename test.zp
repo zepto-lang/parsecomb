@@ -1,0 +1,14 @@
+; A toy example that parses bynary sequences
+(load "parser-combinators/parsecomb")
+(define alt (import "parsecomb:either"))
+(define char (import "parsecomb:char"))
+(define many1 (import "parsecomb:many1"))
+(define parse-all (import "parsecomb:parse-all"))
+
+(parsecomb:define-parser parser
+  (many1 (alt (char #\1) (char #\0))))
+
+(monads:print (parser "010011")) ; => (:right ('0' '1' '0' '0' '1' '1'))
+(monads:print (parser "010011a")) ; => (:right (('0' '1' '0' '0' '1' '1') 'a'))
+(monads:print (parse-all parser "010011")) ; (:right ('0' '1' '0' '0' '1' '1'))
+(monads:print (parse-all parser "010011a")) ; (:left "Unconsumed input: a")
