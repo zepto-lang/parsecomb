@@ -24,9 +24,17 @@ Matches a given string.
 
 Matches a given char.
 
+### many
+
+Takes a parser that must match zero or more times. Think of the `*` operator in regexes.
+
 ### many1
 
-Takes a parser that must match one or more times.
+Takes a parser that must match one or more times. Think of the `?` operator in regexes.
+
+### skip
+
+Takes a parser and skips its' input.
 
 ### parse-all
 
@@ -36,6 +44,17 @@ Takes a parser that must consume the entire input string.
 
 Lots. If you have any suggestions that are not in any parser combinator library
 I know somewhat well (parsec, mpc), hit me up with your cool ideas.
+
+## Known Bugs
+
+This library is based on LL1 (left-recursive) parsing. This means that there
+are some limitations on recursive parsers, i.e.
+
+```
+(parsecomb:define-parser r (either r (string "lol")))
+```
+
+will build a parser that never terminates.
 
 <br/>
 
