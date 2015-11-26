@@ -47,7 +47,7 @@ I know somewhat well (parsec, mpc), hit me up with your cool ideas.
 
 ## Known Bugs
 
-This library is based on LL1 (left-recursive) parsing. This means that there
+This library does not handle left-recursive grammars well. This means that there
 are some limitations on recursive parsers, i.e.
 
 ```
