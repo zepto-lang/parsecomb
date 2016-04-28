@@ -25,6 +25,8 @@
     (list "many1" many1)
     (list "string" string))
 
+  (loads "monads/either")
+
     (parse (lambda (parser str)
       (let ((res (parser str)))
         (monads:either res
