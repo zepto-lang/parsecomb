@@ -11,15 +11,18 @@
   (pc:either (pc:string "true")
              (pc:string "false")))
 
-(define-parser positive "pos"
+(define-parser num
   (pc:either
     (pc:seq* (pc:many1 (pc:digit))
              (pc:char #\.)
              (pc:many1 (pc:digit)))
     (pc:many1 (pc:digit))))
 
+(define-parser positive "pos"
+  num)
+
 (define-parser negative "neg"
-  (pc:seq* (pc:char #\-) positive))
+  (pc:seq* (pc:skip (pc:char #\-)) num))
 
 (define-parser number
   (pc:either positive
