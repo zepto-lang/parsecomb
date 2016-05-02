@@ -1,11 +1,20 @@
 (define-syntax delay-parser
   (syntax-rules ()
+    ((_ label parser)
+      (lambda args
+        (let ((res (apply parser args)))
+          (monads:either res
+            (val => (monads:right (list (list label (car val)) (cadr val))))
+            (_   => res)))))
     ((_ parser)
       (lambda args
         (apply parser args)))))
 
 (define-syntax define-parser
   (syntax-rules ()
+    ((_ parser label body)
+      (define parser
+        (delay-parser label body)))
     ((_ parser body)
       (define parser
         (delay-parser body)))))

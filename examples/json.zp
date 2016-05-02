@@ -4,33 +4,39 @@
 (define-parser spaces
   (pc:many (pc:skip (pc:space))))
 
-(define-parser null
+(define-parser null "null"
   (pc:string "null"))
 
-(define-parser boolean
+(define-parser boolean "bool"
   (pc:either (pc:string "true")
              (pc:string "false")))
 
-(define-parser positive
+(define-parser positive "pos"
   (pc:either
     (pc:seq* (pc:many1 (pc:digit))
              (pc:char #\.)
              (pc:many1 (pc:digit)))
     (pc:many1 (pc:digit))))
 
-(define-parser negative
+(define-parser negative "neg"
   (pc:seq* (pc:char #\-) positive))
 
 (define-parser number
   (pc:either positive
              negative))
 
-(define-parser str
-  (pc:either
-    (pc:seq* (pc:char #\") (pc:many (pc:unless #\")) (pc:char #\"))
-    (pc:seq* (pc:char #\') (pc:many (pc:unless #\')) (pc:char #\'))))
+(define-parser single-quote
+  (pc:skip (pc:char #\')))
 
-(define-parser object-pair
+(define-parser double-quote
+  (pc:skip (pc:char #\")))
+
+(define-parser str "string"
+  (pc:either
+    (pc:seq* double-quote (pc:many (pc:unless #\")) double-quote)
+    (pc:seq* single-quote (pc:many (pc:unless #\')) single-quote)))
+
+(define-parser object-pair "pair"
   (pc:seq*
     str
     spaces
@@ -44,21 +50,21 @@
     (pc:char #\,)
     spaces))
 
-(define-parser object
+(define-parser object "object"
   (pc:seq*
-    (pc:char #\{)
+    (pc:skip (pc:char #\{))
     spaces
     (pc:sep-by object-pair comma)
     spaces
-    (pc:char #\})))
+    (pc:skip (pc:char #\}))))
 
-(define-parser array
+(define-parser array "array"
   (pc:seq*
-    (pc:char #\[)
+    (pc:skip (pc:char #\[))
     spaces
     (pc:sep-by json-parser comma)
     spaces
-    (pc:char #\])))
+    (pc:skip (pc:char #\]))))
 
 (define-parser json-parser
   (pc:one-of
