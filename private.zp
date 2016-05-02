@@ -1,0 +1,168 @@
+(define-syntax parsecomb:delay-parser
+  (syntax-rules ()
+    ((parsecomb:delay-parser parser)
+      (lambda args
+        (apply parser args)))))
+
+(define-syntax parsecomb:define-parser
+  (syntax-rules ()
+    ((parsecomb:define-parser parser body)
+      (define parser
+        (parsecomb:delay-parser body)))))
+
+(module "parsecomb"
+  (export
+    (list "succeed" succeed)
+    (list "fail" fail)
+    (list "skip" skip)
+    (list "either" either)
+    (list "seq" seq)
+    (list "char" char)
+    (list "char-ci" char-ci)
+    (list "one-of" one-of)
+    (list "bin" bin)
+    (list "digit" digit)
+    (list "hex" hex)
+    (list "oct" oct)
+    (list "parse-all" parse)
+    (list "many" many)
+    (list "many1" many1)
+    (list "string" string))
+
+  (parse (lambda (parser str)
+    (let ((res (parser str)))
+      (monads:either res
+        (val =>
+          (if (falsy? (cadr val))
+            (monads:right val)
+            (monads:left (++ "Unconsumed input: " (cadr val)))))
+        (err =>
+          (monads:left (++ "Error in: " err)))))))
+
+  (memoize (lambda (f)
+    (let ((table (make-hash)))
+      (lambda x
+        (let ((previously-computed-result (table (make-simple-list x))))
+          (if (nil? previously-computed-result)
+            (let ((result (apply f x)))
+              (begin
+                (set! table (make-hash table (make-simple-list x) result))
+                result))
+            previously-computed-result))))))
+
+  (succeed (lambda (x y)
+    (monads:right (list x y))))
+
+  (fail (lambda (x) (monads:left x)))
+
+  (success-on-eq (lambda (a b rest str)
+    (if (eq? a b)
+      (succeed a rest)
+      (fail str))))
+
+  (skip
+    (lambda (parser)
+      (memoize
+        (lambda (str)
+          (let ((res (parser str)))
+            (monads:either res
+              (val => (monads:right (list '() (cadr val))))
+              (err => (monads:left err))))))))
+
+  (either 
+      (lambda (a b)
+        (memoize
+          (lambda (str)
+            (let ((result (a str)))
+              (monads:either result
+                (val => (monads:right val))
+                (_   => (b str))))))))
+
+  (one-of
+    (lambda args
+      (memoize
+        (lambda (str)
+          (if (null? args)
+            (monads:left str)
+            (let ((res ((head args) str)))
+              (monads:either res
+                (val => (monads:right val))
+                (_   => ((apply one-of (tail args)) str)))))))))
+
+  (seq 
+      (lambda (a b)
+        (memoize
+          (lambda (str)
+            (let ((res (a str)))
+              ((monads:bind res) (lambda (val)
+                (let ((res2 (b (cadr val))))
+                  ((monads:bind res2) (lambda (val2)
+                    (succeed (list (car val) (car val2)) (cadr val2))))))))))))
+
+  (many
+    (lambda (parser)
+      (memoize
+        (lambda (str)
+          (let loop ((before (monads:right (list "" str)))
+                     (res (parser str))
+                     (acc-res []))
+            (if (monads:right? res) 
+              (let* ((mon-val (monads:get-val! res))
+                     (value (cadr mon-val))
+                     (parsed (car mon-val)))
+                (if (falsy? value)
+                  (monads:right (++ acc-res parsed))
+                  (loop res (parser value) (++ acc-res parsed))))
+              (if (monads:right? before)
+                (monads:right (list acc-res (cadr (monads:get-val! before))))
+                before)))))))
+
+  (many1
+    (lambda (parser)
+      (memoize
+        (lambda (str)
+          (let loop ((before (monads:left str))
+                     (res (parser str))
+                     (acc-res []))
+            (if (monads:right? res) 
+              (let* ((mon-val (monads:get-val! res))
+                     (value (cadr mon-val))
+                     (parsed (car mon-val)))
+                (if (falsy? value)
+                    (monads:right (++ acc-res parsed))
+                    (loop res (parser value) (++ acc-res parsed))))
+              (if (monads:right? before)
+                (monads:right (list acc-res (cadr (monads:get-val! before))))
+                before)))))))
+
+  (char 
+      (lambda (match)
+        (memoize
+          (lambda (str)
+            (success-on-eq (string:head str) match (string:tail str) str)))))
+
+  (char-ci
+    (lambda (match)
+      (either (char (char:lower-case match))
+              (char (char:upper-case match)))))
+
+  (bin (delay (either (char #\0) (char #\1))))
+
+  (oct (delay
+          (one-of (bin) (char #\2) (char #\3) (char #\4)
+                  (char #\5) (char #\6) (char #\7))))
+
+  (digit (delay (one-of (oct) (char #\8) (char #\9))))
+
+  (hex (delay
+          (one-of (digit) (char-ci #\a) (char-ci #\b)
+                  (char-ci #\c) (char-ci #\d))))
+
+  (string 
+      (lambda (match)
+        (memoize
+          (lambda (str)
+            (let* ((len (min (string:length str) (string:length match)))
+                   (h (substring str 0 len))
+                   (t (substring str len (string:length str))))
+              (success-on-eq h match t str)))))))

@@ -8,6 +8,8 @@
 (parsecomb:define-parser bit
   (alt (char #\1) (char #\0)))
 
+;alternatively, just use (parsecomb:bin) for parsing binary digits
+
 (parsecomb:define-parser binary-sequence
   (many1 bit))
 

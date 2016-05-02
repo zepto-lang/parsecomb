@@ -24,6 +24,26 @@ Matches a given string.
 
 Matches a given char.
 
+### char-ci
+
+Matches a given char case-insensitively.
+
+### bin
+
+Matches binary digits.
+
+### oct
+
+Matches octal digits.
+
+### digit
+
+Matches decimal digits.
+
+### hex
+
+Matches hexadecimal digits.
+
 ### many
 
 Takes a parser that must match zero or more times. Think of the `*` operator in regexes.
@@ -35,6 +55,10 @@ Takes a parser that must match one or more times. Think of the `?` operator in r
 ### skip
 
 Takes a parser and skips its' input.
+
+### one-of
+
+Takes many parsers and applies one of them if possible.
 
 ### parse-all
 
