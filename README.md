@@ -4,6 +4,9 @@ A parser combinator library. There are not enough parsers implemented yet
 to make this a useful library. The parsers that are implemented might be
 buggy on top of it.
 
+If you want to look at how a parser defined in terms of `parsecomb` might look,
+please look at the example JSON parser in `examples/json.zp`.
+
 ## Implemented parsers
 
 A short list of parsers that are in fact implemented:
@@ -15,6 +18,10 @@ Takes two parsers, either must work.
 ### seq
 
 Takes two parsers and parses sequentially.
+
+### seq\*
+
+Takes a variable number of parsers and parses sequentially.
 
 ### string
 
@@ -44,6 +51,10 @@ Matches decimal digits.
 
 Matches hexadecimal digits.
 
+### space
+
+Matches whitespace characters.
+
 ### many
 
 Takes a parser that must match zero or more times. Think of the `*` operator in regexes.
@@ -55,6 +66,10 @@ Takes a parser that must match one or more times. Think of the `?` operator in r
 ### skip
 
 Takes a parser and skips its' input.
+
+### sep-by
+
+Takes a parser for elements and a parser for separators and tries to intersperse them.
 
 ### one-of
 

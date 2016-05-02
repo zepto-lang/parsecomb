@@ -1,0 +1,73 @@
+(load "parsecomb/parsecomb")
+(import-all "parsecomb" "pc")
+
+(define-parser spaces
+  (pc:many (pc:skip (pc:space))))
+
+(define-parser null
+  (pc:string "null"))
+
+(define-parser boolean
+  (pc:either (pc:string "true")
+             (pc:string "false")))
+
+(define-parser positive
+  (pc:either
+    (pc:seq* (pc:many1 (pc:digit))
+             (pc:char #\.)
+             (pc:many1 (pc:digit)))
+    (pc:many1 (pc:digit))))
+
+(define-parser negative
+  (pc:seq* (pc:char #\-) positive))
+
+(define-parser number
+  (pc:either positive
+             negative))
+
+(define-parser str
+  (pc:either
+    (pc:seq* (pc:char #\") (pc:many (pc:unless #\")) (pc:char #\"))
+    (pc:seq* (pc:char #\') (pc:many (pc:unless #\')) (pc:char #\'))))
+
+(define-parser object-pair
+  (pc:seq*
+    str
+    spaces
+    (pc:skip (pc:char #\:))
+    spaces
+    json-parser))
+
+(define-parser comma
+  (pc:seq*
+    spaces
+    (pc:char #\,)
+    spaces))
+
+(define-parser object
+  (pc:seq*
+    (pc:char #\{)
+    spaces
+    (pc:sep-by object-pair comma)
+    spaces
+    (pc:char #\})))
+
+(define-parser array
+  (pc:seq*
+    (pc:char #\[)
+    spaces
+    (pc:sep-by json-parser comma)
+    spaces
+    (pc:char #\])))
+
+(define-parser json-parser
+  (pc:one-of
+    number
+    str
+    boolean
+    null
+    object
+    array))
+
+(define (parse-json str)
+  (pc:parse-all json-parser str))

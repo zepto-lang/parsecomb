@@ -5,12 +5,12 @@
 (define many1 (import "parsecomb:many1"))
 (define parse-all (import "parsecomb:parse-all"))
 
-(parsecomb:define-parser bit
+(define-parser bit
   (alt (char #\1) (char #\0)))
 
 ;alternatively, just use (parsecomb:bin) for parsing binary digits
 
-(parsecomb:define-parser binary-sequence
+(define-parser binary-sequence
   (many1 bit))
 
 (monads:print (binary-sequence "010011")) ; => (:right ('0' '1' '0' '0' '1' '1'))
