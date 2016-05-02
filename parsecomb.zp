@@ -1,5 +1,3 @@
-(load "monads/either")
-
 (define-syntax parsecomb:delay-parser
   (syntax-rules ()
     ((parsecomb:delay-parser parser)
@@ -25,7 +23,7 @@
     (list "many1" many1)
     (list "string" string))
 
-  (loads "monads/either")
+  (loads "monads/either.zp")
 
     (parse (lambda (parser str)
       (let ((res (parser str)))
